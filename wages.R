@@ -35,5 +35,8 @@ wages = merge(riel,
     all.x = TRUE)
 wages = wages[year > 1850]
 
+# in 1877 the minimum taxable income in A'dam was fl. 600 (de Meere)
+wages[year == 1877]
+# so here the household income would work
 # overall something like 800 would not be out of the ordinary for the end of our period
 fwrite(wages, "dat/wages.csv")
