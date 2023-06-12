@@ -52,9 +52,10 @@ sample_from_lognormal = function(y, n_missing){
     return(out)
 }
 
-impute_from_subsistence = function(y, n_missing){
+impute_from_subsistence = function(y, n_missing, y_subsistence){
     # fill NAs with subsistence incomes from X
     # tbd
+     out = c(y, rep(y_subsistence, times = n_missing))
 
-    return(y)
+    return(out)
 }
