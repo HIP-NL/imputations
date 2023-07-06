@@ -16,7 +16,7 @@ mypar = function(...){
         font.main = 1)
 }
 
-tax = read_parquet("~/Downloads/tax_records_latest.parquet")
+tax = read_parquet("/Users/werk/Documents/git_hipnl/data/tax_records/tax_records_latest.parquet")
 setDT(tax)
 
 tax = tax[place == "Harlingen" & year == 1889]

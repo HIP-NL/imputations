@@ -1,0 +1,39 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+rm(list = ls())
+
+library("data.table")
+library("arrow")
+library("ineq")     # inequality measures and example data
+library("EnvStats") # for estimation of censored distributions
+source("impute.R") 
+```
+
+```{r}
+
+mypar = function(...){
+    par(..., 
+        bty = "l", 
+        mar = c(4, 3, 2, 1), 
+        mgp = c(1.7, .5, 0), 
+        tck=-.01,
+        font.main = 1)
+}
+
+tax = read_parquet("/Users/werk/Documents/git_hipnl/data/tax_records/tax_records_latest.parquet")
+setDT(tax)
+```
+
+```{r}
+tax = tax[place == "Harlingen" & year == 1889]
+y_trunc = na.omit(tax$income_taxable)
+```
+
+```{r}
+n_records = length(y_trunc)
+n_records
+```

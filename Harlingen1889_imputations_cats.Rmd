@@ -1,0 +1,166 @@
+---
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+------------------------------------------------------------------------
+
+title: "R Notebook" output: html_notebook
+
+#harlingen1889_bevolking huisgezinnen = 2133 hoofd_huisgezinnen =
+idem_huisgezinnen afzonderlijk_levenden = 221 overige_leden = 2310
+tax_records = 978
+
+# libraries
+
+```{r}
+library("data.table")
+library("arrow")
+library("ineq")     # inequality measures and example data
+library("EnvStats") # for estimation of censored distributions
+source("impute.R") 
+```
+
+# data tax_record
+
+```{r}
+tax = read_parquet("/Users/werk/Documents/git_hipnl/data/tax_records/tax_records_latest.parquet")
+setDT(tax)
+
+tax = tax[place == "Harlingen" & year == 1889]
+
+y_trunc = na.omit(tax$income_taxable)
+n_tax_records = length(y_trunc)
+n_tax_records
+```
+
+```{r}
+#harlingen1889_bevolking
+huisgezinnen = 2133 
+hoofd_huisgezinnen = huisgezinnen
+afzonderlijk_levenden = 221
+overige_leden = 2310
+
+```
+
+```{r}
+cat1 = huisgezinnen + afzonderlijk_levenden
+cat2 = afzonderlijk_levenden + (huisgezinnen*2) + overige_leden
+cat3 = afzonderlijk_levenden + huisgezinnen + overige_leden
+#proportioneel = x*cat1 + x*cat2 + x*cat3
+```
+
+```{r}
+categories = c(cat1 = cat1, cat2 = cat2, cat3 = cat3)
+n_missing_by_cat = categories - n_tax_records
+n_missing_by_cat
+```
+
+```{r}
+# naive estimates
+naive_estimates = c(
+  gini = ineq::Gini(y_trunc),
+  mean_log = mean(log(y_trunc), na.rm = TRUE),
+  sd_log = sd(log(y_trunc), na.rm = TRUE)
+)
+naive_estimates
+```
+
+# mean; sd; zonder imputaties lnorm
+
+```{r}
+sapply(n_missing_by_cat, estimate_lnorm, y = y_trunc)
+
+
+```
+
+# gini_sd
+
+```{r}
+# impute_from_sd() uses the sd from the lognormal to estimate the Gini
+toplot_from_sd = sapply(n_missing_by_cat, impute_from_sd, y = y_trunc)
+toplot_from_sd
+```
+
+```{r}
+parameters = estimate_lnorm(y_trunc, n_missing_by_cat[1])
+parameters
+```
+
+```{r}
+c(
+        y_trunc, 
+        rep(min(y_trunc, na.rm = TRUE), n_missing_by_cat[1])
+    )
+```
+
+```{r}
+imputations = rnormTrunc(
+        n = n_missing_by_cat[1], 
+        mean = parameters$log_mean, 
+        sd = parameters$log_sd, 
+        min = -Inf,
+        max = min(log(y_trunc)))
+sort(exp(imputations))
+```
+
+```{r}
+pnorm(parameters$log_sd / sqrt(2))
+```
+
+```{r}
+out = c(y_trunc, exp(imputations))
+out_dens <- density(out) # returns the density data 
+plot(out_dens, )
+# out < 500
+```
+
+# gini_lnorm
+
+```{r}
+# list of samples
+resampled = lapply(n_missing_by_cat, sample_from_lognormal, y = y_trunc)
+# gini on each sample in the list
+toplot_resampled = sapply(resampled, ineq::Gini)
+toplot_resampled
+
+```
+
+```{r}
+toplot_resampled - toplot_from_sd
+```
+
+```{r}
+barplot(toplot_resampled, main = "gini_resampled_lnorm", ylim = c(0,1))
+barplot(toplot_from_sd, main = "gini_sd_method", ylim = c(0,1))
+```
+
+# proportioneel
+
+```{r}
+categories_proportions = c(cat1 = 0.83, cat2 = 0.04, cat3 = 0.13)
+n_categories_proportional = categories_proportions * categories
+n_categories_proportional
+
+n_proportional_missing = sum(n_categories_proportional)
+n_proportional_missing
+
+
+
+
+
+
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or
+by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output
+will be saved alongside it (click the *Preview* button or press
+*Cmd+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the
+editor. Consequently, unlike *Knit*, *Preview* does not run any R code
+chunks. Instead, the output of the chunk when it was last run in the
+editor is displayed.
