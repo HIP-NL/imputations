@@ -124,3 +124,56 @@ def impute_from_subsistence(y, n_missing, y_subsistence):
     out = np.concatenate((y, np.full(n_missing, y_subsistence)))
     
     return out
+
+
+
+import numba
+
+@numba.njit()
+def random_class_incomes(min_values, max_values, counts):
+    """Generate random income values for each class, based on the min and max values and the number of values to generate for each class"""
+    
+    # calculate total number of values to generate
+    size = np.sum(counts)
+    # create empty array
+    all_class_incomes = np.empty(size)
+    
+    # generate random income values for each class, and add to all_class_incomes
+    start = 0
+    for i in range(len(min_values)):
+        end = start + counts[i]
+        all_class_incomes[start:end] = np.random.uniform(min_values[i], max_values[i], counts[i])
+        start = end
+
+    assert len(all_class_incomes) == counts.sum(), "Length of class_incomes should be equal to sum of income_class in class_table"
+
+    return all_class_incomes
+
+
+def random_class_incomes_wrapper(class_table):
+    """Wrapper around random_class_incomes, to be able to input a pandas dataframe directly"""
+    all_class_incomes = random_class_incomes(class_table['min'].to_numpy(), class_table['max'].to_numpy(), class_table['count'].to_numpy())
+    return all_class_incomes
+
+
+# @numba.jit(nopython=True)
+def gini_coefficient(array):
+    # array = np.array(array)
+    n = array.shape[0]
+    array_sorted = np.sort(array)
+    index = np.arange(1, n+1)
+    weighted_sum = (array_sorted * index).sum()
+    
+    gini = (2 * weighted_sum) / (n * array.sum()) - (n + 1) / n
+    return gini
+
+test_array = np.array((5 * [50]) + (10 * [100]) + (5 * [300]))
+gini = gini_coefficient(test_array)
+
+
+
+def impute_and_calc_gini(i, n_missing, class_table):
+    simulated_incomes = random_class_incomes_wrapper(class_table)
+    imputed = sample_from_lognormal(simulated_incomes, n_missing)
+    gini = gini_coefficient(imputed)
+    return gini, simulated_incomes, imputed
