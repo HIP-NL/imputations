@@ -73,7 +73,7 @@ def impute_from_sd(y, n_missing):
     
     return gini
 
-def sample_from_lognormal(y, n_missing):
+def sample_from_lognormal_py(y, n_missing):
     # Fill NAs with resample from truncated lognormal distribution
     # Parameters:
     #   y: the untransformed data
@@ -94,24 +94,24 @@ def sample_from_lognormal(y, n_missing):
     return out
 
 
-# def sample_from_lognormal(y, n_missing):
-#     # fill NAs with resample from trunc lnorm
-#     # expects
-#     #   y: the untransformed data
-#     #   n_missing: the expected number of missing observations
+def sample_from_lognormal(y, n_missing):
+    # fill NAs with resample from trunc lnorm
+    # expects
+    #   y: the untransformed data
+    #   n_missing: the expected number of missing observations
 
-#     parameters = estimate_lnorm(y, n_missing)
+    parameters = estimate_lnorm(y, n_missing)
     
-#     imputations = env_stats.rnormTrunc(
-#         n = n_missing, 
-#         mean = parameters['log_mean'], 
-#         sd = parameters['log_sd'], 
-#         a = float('-inf'),
-#         b = np.min(np.log(y)))
+    imputations = env_stats.rnormTrunc(
+        n = n_missing, 
+        mean = parameters['log_mean'], 
+        sd = parameters['log_sd'], 
+        min = float('-inf'),
+        max = float(np.min(np.log(y))))
 
-#     out = np.concatenate([y, np.exp(imputations)])
+    out = np.concatenate([y, np.exp(imputations)])
 
-#     return out
+    return out
 
 
 def impute_from_subsistence(y, n_missing, y_subsistence):
@@ -152,7 +152,12 @@ def random_class_incomes(min_values, max_values, counts):
 
 def random_class_incomes_wrapper(class_table):
     """Wrapper around random_class_incomes, to be able to input a pandas dataframe directly"""
-    all_class_incomes = random_class_incomes(class_table['min'].to_numpy(), class_table['max'].to_numpy(), class_table['count'].to_numpy())
+    # convert class_table to numpy arrays
+    min_values = np.array(class_table['min'].to_numpy(), dtype=np.float64)
+    max_values = np.array(class_table['max'].to_numpy(), dtype=np.float64)
+    counts = np.array(class_table['count'].to_numpy(), dtype=np.int64)
+    # generate random incomes
+    all_class_incomes = random_class_incomes(min_values, max_values, counts)
     return all_class_incomes
 
 
