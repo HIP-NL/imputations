@@ -31,7 +31,7 @@ impute_from_sd = function(y, n_missing){
     return(gini)
 }
 
-sample_from_lognormal = function(y, n_missing){
+sample_from_lognormal = function(y, n_missing, min = 0){
     # fill NAs with resample from trunc lnorm
     # expects
     #   y: the untransformed data
@@ -44,7 +44,7 @@ sample_from_lognormal = function(y, n_missing){
         n = n_missing, 
         mean = parameters$log_mean, 
         sd = parameters$log_sd, 
-        min = -Inf,
+        min = log(min),
         max = min(log(y)))
 
     out = c(y, exp(imputations))
