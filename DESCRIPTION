@@ -2,8 +2,8 @@ Package: imputations
 Type: Package
 Title: Imputation Strategies for Censored Income Data
 Version: 0.1.0
-Author: Rijpm101
-Maintainer: Rijpm101 <Rijpm101@users.noreply.github.com>
+Author: arijpma
+Maintainer: a.rijpma@uu.nl
 Description: Provides functions to estimate parameters and impute missing values for left-censored income data assuming a Log-Normal distribution.
 License: GPL-3
 Encoding: UTF-8
