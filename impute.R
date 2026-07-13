@@ -18,9 +18,24 @@ estimate_lnorm = function(y, n_missing){
         y_with_censored,
         censored = censored,
         censoring.side = "left")
-    return(list(
-        log_mean = estimates$parameters["meanlog"],
-        log_sd = estimates$parameters["sdlog"]))
+
+
+    # goodness of fit statistics
+    gof = EnvStats::gofTestCensored(
+        x = y_with_censored,
+        censored = censored,
+        censoring.side = "left",
+        distribution = "lnorm",
+        test = "ppcc" # default sf, Shapiro-Francia (default), but worse option for low n we often have. Also, want r test stat
+    )
+
+    return(
+        list(
+            log_mean = estimates$parameters["meanlog"],
+            log_sd = estimates$parameters["sdlog"],
+            gof = gof
+        )
+    )
 }
 
 impute_from_sd = function(y, n_missing){
